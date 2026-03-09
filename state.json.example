@@ -1,0 +1,11 @@
+{
+  "chat_id": "",
+  "user_open_id": "",
+  "current_mode": "agent",
+  "current_model": "claude-4.6-opus",
+  "last_processed_ts": "",
+  "pending_messages": [],
+  "context_files": [],
+  "conversation_history": [],
+  "open_new_composer": true
+}
