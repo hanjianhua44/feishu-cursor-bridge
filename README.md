@@ -25,7 +25,7 @@
 
 ## 快速开始
 
-详见 [USAGE.md](USAGE.md)
+详见 [USAGE.md](USAGE.md) | 版本记录见 [CHANGELOG.md](CHANGELOG.md)
 
 ## 飞书指令
 
