@@ -218,43 +218,23 @@ _trigger_timer: threading.Timer | None = None
 _trigger_open_new = False
 
 
-def _get_clipboard() -> str:
-    """Get current clipboard content via PowerShell."""
-    try:
-        result = subprocess.run(
-            ["powershell", "-Command", "Get-Clipboard"],
-            capture_output=True, text=True, timeout=5,
-        )
-        return result.stdout.rstrip("\r\n")
-    except Exception:
-        return ""
-
-
 def _set_clipboard(text: str):
-    """Set clipboard content via PowerShell, handling all special characters."""
-    encoded = json.dumps(text, ensure_ascii=False)
+    """Set clipboard via PowerShell single-quoted string."""
+    escaped = text.replace("'", "''")
     subprocess.run(
-        ["powershell", "-Command",
-         f"$t = ConvertFrom-Json {encoded} ; Set-Clipboard -Value $t"],
+        ["powershell", "-NoProfile", "-Command",
+         f"Set-Clipboard -Value '{escaped}'"],
         capture_output=True, timeout=5,
     )
 
 
 def _clipboard_paste(text: str):
-    """Save clipboard, paste text, then restore original clipboard."""
+    """Set clipboard and paste with Ctrl+V."""
     import pyautogui
 
-    saved = _get_clipboard()
-    try:
-        _set_clipboard(text)
-        time.sleep(DELAY_CLIPBOARD_SET)
-        pyautogui.hotkey("ctrl", "v")
-    finally:
-        time.sleep(0.2)
-        try:
-            _set_clipboard(saved)
-        except Exception:
-            pass
+    _set_clipboard(text)
+    time.sleep(DELAY_CLIPBOARD_SET)
+    pyautogui.hotkey("ctrl", "v")
 
 
 def _find_cursor_hwnd():
@@ -354,8 +334,10 @@ def schedule_trigger(open_new: bool):
             _trigger_timer.cancel()
 
         def _fire():
-            global _trigger_timer
-            use_new = _trigger_open_new
+            global _trigger_timer, _trigger_open_new
+            with _trigger_lock:
+                use_new = _trigger_open_new
+                _trigger_open_new = False
             success = trigger_cursor_agent(use_new)
             if not success:
                 _notify_trigger_failure()
