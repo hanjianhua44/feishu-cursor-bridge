@@ -535,6 +535,8 @@ def on_message_receive(data: P2ImMessageReceiveV1):
                 feishu.send_message(chat_id, reply)
                 log.info("Command %s handled, replied", cmd)
         else:
+            state = load_state()
+
             open_new = state.get("open_new_composer", False)
             if open_new:
                 state["open_new_composer"] = False
@@ -546,6 +548,10 @@ def on_message_receive(data: P2ImMessageReceiveV1):
                 "message_id": message_id,
             })
             state["last_processed_ts"] = create_time_ms
+            if chat_id:
+                state["chat_id"] = chat_id
+            if sender_id:
+                state["user_open_id"] = sender_id
             save_state(state)
             log.info("Queued (total: %d), triggering Cursor (new=%s)",
                      len(state["pending_messages"]), open_new)
